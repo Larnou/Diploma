@@ -1,44 +1,54 @@
-import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFCell;
-import org.apache.poi.xssf.usermodel.XSSFRow;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 
 public class Parser {
 
     public static ArrayList<Bite> arrayList = new ArrayList<>();
 
-    public static void parse2007(String fileName) throws IOException, InvalidFormatException {
+    public static void parse2007(String fileName) throws IOException {
 
         HSSFWorkbook myExcelBook = new HSSFWorkbook(new FileInputStream(fileName));
-        HSSFSheet myExcelSheet = myExcelBook.getSheet("Birthdays");
-        HSSFRow row = myExcelSheet.getRow(0);
+        HSSFSheet myExcelSheet = myExcelBook.getSheetAt(0);
 
-        for (int i = 0; i < row.getLastCellNum(); i++) {
 
-            if(row.getCell(i).getCellType() == HSSFCell.CELL_TYPE_STRING){
-                String name = row.getCell(i).getStringCellValue();
-                System.out.println("name : " + name);
-            }
+        for (int i = 1; i < myExcelSheet.getLastRowNum() + 1; i++) {
 
-            if(row.getCell(i).getCellType() == HSSFCell.CELL_TYPE_NUMERIC){
-                Date birthdate = row.getCell(i).getDateCellValue();
-                System.out.println("birthdate :" + birthdate);
-            }
+            HSSFRow row = myExcelSheet.getRow(i);
+
+
+            int pp = (int) row.getCell(0).getNumericCellValue();
+
+            Date callDate = (row.getCell(1) == null) ? new Date(0) : row.getCell(1).getDateCellValue();
+            Date biteDate = (row.getCell(2) == null) ? new Date(0) : row.getCell(2).getDateCellValue();
+
+            String inCity = (row.getCell(3) == null) ? "" : row.getCell(3).getStringCellValue();
+            String area = (row.getCell(4) == null) ? "" : row.getCell(4).getStringCellValue();
+            String adminArea = (row.getCell(5) == null) ? "" : row.getCell(5).getStringCellValue();
+            String material = (row.getCell(6) == null) ? "" : row.getCell(6).getStringCellValue();
+            String kleshKB = (row.getCell(7) == null) ? "" : row.getCell(7).getStringCellValue();
+            String kleshKE = (row.getCell(8) == null) ? "" : row.getCell(8).getStringCellValue();
+            String antiGen = (row.getCell(9) == null) ? "" : row.getCell(9).getStringCellValue();
+            String typeOfKlesh = (row.getCell(10) == null) ? "" : row.getCell(10).getStringCellValue();
+            String genderOfKlesh = (row.getCell(11) == null) ? "" : row.getCell(11).getStringCellValue();
+
+            Bite bite = new Bite(pp, callDate, biteDate, inCity, area, adminArea, material, kleshKB, kleshKE, antiGen, typeOfKlesh, genderOfKlesh);
+
+            arrayList.add(bite);
         }
         myExcelBook.close();
     }
 
-    public static void parse2013(String fileName) throws IOException {
+
+
+    /*public static void parse2013(String fileName) throws IOException {
         XSSFWorkbook myExcelBook = new XSSFWorkbook(new FileInputStream(fileName));
         XSSFSheet myExcelSheet = myExcelBook.getSheetAt(0);
 
@@ -134,7 +144,7 @@ public class Parser {
         }
 
         myExcelBook.close();
-    }
+    }*/
 
 
 
