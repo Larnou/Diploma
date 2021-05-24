@@ -10,7 +10,7 @@ class DrawMap extends Frame {
 
     DrawMap() throws IOException {
         setSize(1100, 745);
-        setTitle("Model be like");
+        setTitle("Model");
         setVisible(true);
         addWindowListener(new WindowAdapter() {
                               public void windowClosing(WindowEvent we) {
@@ -19,7 +19,7 @@ class DrawMap extends Frame {
                           }
         );
     }
-    private final Image backgroundImage = ImageIO.read(new File("map.png"));
+    private final Image backgroundImage = ImageIO.read(new File("Images/map.png"));
 
 
     public void paint(Graphics g) {
@@ -28,7 +28,7 @@ class DrawMap extends Frame {
 
 
         g.setColor(Color.RED);
-        g.drawOval(200, 400, 100, 100);
+        g.drawOval(600, 300, 100, 100);
     }
 
 }
