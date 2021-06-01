@@ -14,149 +14,87 @@ public class Parser {
     public static ArrayList<Bite> gigaArray = new ArrayList<>();
     public static ArrayList<Weather> weatherArray = new ArrayList<>();
 
-    public static void excelParser(String fileName, String extension) throws IOException {
+    public static void createForAnalysis() throws IOException {
 
-        ArrayList<Bite> localArray = new ArrayList<>();
+        Workbook book = new XSSFWorkbook();
+        Sheet sheet = book.createSheet("Статистика для анализа");
+        Row row = sheet.createRow(0);
 
-        switch (extension) {
-            case "xls" -> {
-                Excel<HSSFWorkbook, HSSFSheet> excel = new Excel<>(
-                        new HSSFWorkbook(new FileInputStream(fileName)),
-                        new HSSFWorkbook(new FileInputStream(fileName)).getSheetAt(0)
-                );
+        // ======================================//
+        // === Записываем названия столбцов === //
+        // ====================================//
 
-                for (int i = 1; i < excel.getSheet().getLastRowNum() + 1; i++) {
+        Cell callDateC = row.createCell(0);
+        callDateC.setCellValue("Дата обращения");
 
-                    HSSFRow row = excel.getSheet().getRow(i);
+        Cell avgTemperatureC = row.createCell(1);
+        avgTemperatureC.setCellValue("Средняя температура");
 
-                    Date callDate = (row.getCell(1) == null) ? new Date(0) : row.getCell(1).getDateCellValue();
-                    Date biteDate = (row.getCell(2) == null) ? new Date(0) : row.getCell(2).getDateCellValue();
-                    String inCity = (row.getCell(3) == null) ? "" : row.getCell(3).getStringCellValue();
-                    String area = (row.getCell(4) == null) ? "" : row.getCell(4).getStringCellValue();
-                    String adminArea = (row.getCell(5) == null) ? "" : row.getCell(5).getStringCellValue();
-                    String material = (row.getCell(6) == null) ? "" : row.getCell(6).getStringCellValue();
-                    String kleshKB = (row.getCell(7) == null) ? "" : row.getCell(7).getStringCellValue();
-                    String kleshKE = (row.getCell(8) == null) ? "" : row.getCell(8).getStringCellValue();
-                    String antiGen = (row.getCell(9) == null) ? "" : row.getCell(9).getStringCellValue();
-                    String typeOfKlesh = (row.getCell(10) == null) ? "" : row.getCell(10).getStringCellValue();
-                    String genderOfKlesh = (row.getCell(11) == null) ? "" : row.getCell(11).getStringCellValue();
+        Cell avgHumidityC = row.createCell(2);
+        avgHumidityC.setCellValue("Средняя влажность воздуха");
 
-                    Bite bite = new Bite(callDate, biteDate, inCity, area, adminArea, material, kleshKB, kleshKE,
-                            antiGen, typeOfKlesh, genderOfKlesh);
+        Cell dayOfWeekC = row.createCell(3);
+        dayOfWeekC.setCellValue("Если выходной 1, иначе 0");
 
-                    localArray.add(bite);
-                }
-                excel.getWorkbook().close();
-                gigaArray.addAll(localArray);
-            }
-            case "xlsx" -> {
+        Cell amountC = row.createCell(4);
+        amountC.setCellValue("Количество обращений");
 
-                Excel<XSSFWorkbook, XSSFSheet> excel = new Excel<>(
-                        new XSSFWorkbook(new FileInputStream(fileName)),
-                        new XSSFWorkbook(new FileInputStream(fileName)).getSheetAt(0));
 
-                for (int i = 1; i < excel.getSheet().getLastRowNum() + 1; i++) {
 
-                    XSSFRow row = excel.getSheet().getRow(i);
+        //=======================================================//
+        // Заполняем значения таблицы необходимыми нами данными //
+        //=====================================================//
 
-                    Date callDate = (row.getCell(1) == null) ? new Date(0) : row.getCell(1).getDateCellValue();
-                    Date biteDate = (row.getCell(2) == null) ? new Date(0) : row.getCell(2).getDateCellValue();
-                    String inCity = (row.getCell(3) == null) ? "" : row.getCell(3).getStringCellValue();
-                    String area = (row.getCell(4) == null) ? "" : row.getCell(4).getStringCellValue();
-                    String adminArea = (row.getCell(5) == null) ? "" : row.getCell(5).getStringCellValue();
-                    String material = (row.getCell(6) == null) ? "" : row.getCell(6).getStringCellValue();
-                    String kleshKB = (row.getCell(7) == null) ? "" : row.getCell(7).getStringCellValue();
-                    String kleshKE = (row.getCell(8) == null) ? "" : row.getCell(8).getStringCellValue();
-                    String antiGen = (row.getCell(9) == null) ? "" : row.getCell(9).getStringCellValue();
-                    String typeOfKlesh = (row.getCell(10) == null) ? "" : row.getCell(10).getStringCellValue();
-                    String genderOfKlesh = (row.getCell(11) == null) ? "" : row.getCell(11).getStringCellValue();
+        TreeMap<Calendar, Integer> callsStats = getMapWithDataAndAmount();
 
-                    Bite bite = new Bite(callDate, biteDate, inCity, area, adminArea, material, kleshKB, kleshKE,
-                            antiGen, typeOfKlesh, genderOfKlesh);
+        int cnt = 0;
 
-                    localArray.add(bite);
-                }
-                excel.getWorkbook().close();
-                gigaArray.addAll(localArray);
-            }
+        DataFormat format = book.createDataFormat();
+        CellStyle dateStyle = book.createCellStyle();
+        dateStyle.setDataFormat(format.getFormat("dd.mm.yyyy"));
+
+        for (Map.Entry<Calendar, Integer> entry : callsStats.entrySet()) {
+
+            cnt += 1;
+
+            Row newRow = sheet.createRow(cnt);
+
+
+            Cell callDate = newRow.createCell(0);
+            callDate.setCellValue(entry.getKey());
+            callDate.setCellStyle(dateStyle);
+
+            Weather weatherInfo = getWeatherInfoByDate(entry.getKey().getTime());
+
+            Cell avgTemperature = newRow.createCell(1);
+            avgTemperature.setCellValue(weatherInfo.getTemperature());
+
+            Cell avgHumidity = newRow.createCell(2);
+            avgHumidity.setCellValue(weatherInfo.getHumidity());
+
+            Cell dayOfWeek = newRow.createCell(3);
+
+            if (weatherInfo.getCurrentDay().get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY ||
+                    weatherInfo.getCurrentDay().get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY ) {
+                dayOfWeek.setCellValue(1);
+            } else {
+                dayOfWeek.setCellValue(0);
+            } // либо по приколу тут можно тернарник написать
+            // TODO: 01.06.2021 Если подумать на клещей не влияет день недели, это влияет на активность людей, а те в свою очередь чаще встречаются с клещами 
+
+            Cell amount = newRow.createCell(4);
+            amount.setCellValue(entry.getValue());
         }
-    }
 
-
-    public static void weather(String fileName) throws IOException {
-
-        XSSFWorkbook myExcelBook = new XSSFWorkbook(new FileInputStream(fileName));
-
-        for (int i = 0; i < 3; i++) {
-
-            XSSFSheet weatherSheet = myExcelBook.getSheetAt(i);
-            Calendar currentDay = new GregorianCalendar(2010 + i, Calendar.JANUARY, 1);
-
-            for (int j = 0; j < 330; j++) {
-
-                Calendar day = null;
-                double avgTemperature;
-                double avgHumidity;
-                ArrayList<Double> temparaturesPerDay = new ArrayList<>();
-                ArrayList<Double> humidityPerDay = new ArrayList<>();
-
-                for (int k = 1; k < weatherSheet.getLastRowNum(); k++) {
-
-                    XSSFRow row = weatherSheet.getRow(k);
-
-                    if (row != null) {
-                        if (row.getCell(1) != null) {
-
-                            Calendar dayToWrite = new GregorianCalendar();
-                            dayToWrite.setTime(row.getCell(1).getDateCellValue());
-
-                            if (    dayToWrite.get(Calendar.YEAR) == currentDay.get(Calendar.YEAR) &&
-                                    dayToWrite.get(Calendar.MONTH) == currentDay.get(Calendar.MONTH) &&
-                                    dayToWrite.get(Calendar.DAY_OF_MONTH) == currentDay.get(Calendar.DAY_OF_MONTH)) {
-
-                                if (row.getCell(8) != null && row.getCell(10) != null) {
-                                    if (row.getCell(8).getCellType() == Cell.CELL_TYPE_STRING) {
-                                        double temperature = Double.parseDouble(row.getCell(8).getStringCellValue());
-                                        temparaturesPerDay.add(temperature);
-                                    }
-                                    if (row.getCell(8).getCellType() == Cell.CELL_TYPE_NUMERIC) {
-                                        double temperature = row.getCell(8).getNumericCellValue();
-                                        temparaturesPerDay.add(temperature);
-                                    }
-                                    humidityPerDay.add(row.getCell(10).getNumericCellValue());
-                                    day = dayToWrite;
-                                }
-                            }
-                        }
-                    }
-                }
-
-                if (day != null) {
-
-                    double tempSum = 0;
-                    for (double el : temparaturesPerDay) {
-                        tempSum += el;
-                    }
-
-                    double humSum = 0;
-                    for (double el : humidityPerDay) {
-                        humSum += el;
-                    }
-
-                    avgTemperature = tempSum / temparaturesPerDay.size();
-                    avgHumidity = humSum / humidityPerDay.size();
-
-//                System.out.println("Day: " + day.get(Calendar.DAY_OF_MONTH) + " " + (day.get(Calendar.MONTH)+1) + " " + day.get(Calendar.YEAR)
-//                        + " Tempa: " + avgTemperature + " Humki: " + avgHumidity);
-
-                    Weather weather = new Weather(day, avgTemperature, avgHumidity);
-                    weatherArray.add(weather);
-                }
-                currentDay.add(Calendar.DAY_OF_YEAR, 1);
-            }
+        // Авторазмер ширины столбца для корректного отображения данных ячейки
+        for (int i = 0; i < 10 ; i++) {
+            sheet.autoSizeColumn(i);
         }
-    }
 
+        // Записываем всё в файл
+        book.write(new FileOutputStream("Analysis.xlsx"));
+        book.close();
+    }
 
     public static void create() throws IOException {
 
@@ -205,6 +143,12 @@ public class Parser {
 
         Cell genderOfKleshC = row.createCell(11);
         genderOfKleshC.setCellValue("Пол клеща");
+
+        Cell avgTemperatureC = row.createCell(12);
+        avgTemperatureC.setCellValue("Средняя температура");
+
+        Cell avgHumidityC = row.createCell(13);
+        avgHumidityC.setCellValue("Средняя влажность воздуха");
 
         //=======================================================//
         // Заполняем значения таблицы необходимыми нами данными //
@@ -277,41 +221,248 @@ public class Parser {
             // добавление погоды
             // ========================
 
-            /*Cell weather = newRow.createCell(12);
-            weather.setCellValue(findTemperatureByDate(gigaArray.get(i).getCallDate()));*/
+            Weather weatherInfo = getWeatherInfoByDate(gigaArray.get(i).getCallDate());
+
+            Cell avgTemperature = newRow.createCell(12);
+            avgTemperature.setCellValue(weatherInfo.getTemperature());
+
+            Cell avgHumidity = newRow.createCell(13);
+            avgHumidity.setCellValue(weatherInfo.getHumidity());
         }
-
-
 
         // Авторазмер ширины столбца для корректного отображения данных ячейки
-        for (int i = 0; i < 12 ; i++) {
+        for (int i = 0; i < 14 ; i++) {
             sheet.autoSizeColumn(i);
         }
-
-
-
-
-
-
-
-
-
-        /*Cell callDate = row.createCell(1);
-        DataFormat format = book.createDataFormat();
-        CellStyle dateStyle = book.createCellStyle();
-        dateStyle.setDataFormat(format.getFormat("dd.mm.yyyy"));
-        callDate.setCellStyle(dateStyle);
-        // Нумерация лет начинается с 1900-го
-        callDate.setCellValue(new Date(98, 11, 01));*/
-
-
 
         // Записываем всё в файл
         book.write(new FileOutputStream("Stats.xlsx"));
         book.close();
-
-
     }
 
 
+    // =========================== //
+    // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ == //
+    // ========================= //
+
+    public static void excelParser(String fileName, String extension) throws IOException {
+
+        ArrayList<Bite> localArray = new ArrayList<>();
+
+        switch (extension) {
+            case "xls" -> {
+                Excel<HSSFWorkbook, HSSFSheet> excel = new Excel<>(
+                        new HSSFWorkbook(new FileInputStream(fileName)),
+                        new HSSFWorkbook(new FileInputStream(fileName)).getSheetAt(0));
+
+                for (int i = 1; i < excel.getSheet().getLastRowNum() + 1; i++) {
+
+                    HSSFRow row = excel.getSheet().getRow(i);
+
+                    Date callDate = (row.getCell(1) == null) ? new Date(0) : row.getCell(1).getDateCellValue();
+                    Date biteDate = (row.getCell(2) == null) ? new Date(0) : row.getCell(2).getDateCellValue();
+                    String inCity = (row.getCell(3) == null) ? "" : row.getCell(3).getStringCellValue();
+                    String area = (row.getCell(4) == null) ? "" : row.getCell(4).getStringCellValue();
+                    String adminArea = (row.getCell(5) == null) ? "" : row.getCell(5).getStringCellValue();
+                    String material = (row.getCell(6) == null) ? "" : row.getCell(6).getStringCellValue();
+                    String kleshKB = (row.getCell(7) == null) ? "" : row.getCell(7).getStringCellValue();
+                    String kleshKE = (row.getCell(8) == null) ? "" : row.getCell(8).getStringCellValue();
+                    String antiGen = (row.getCell(9) == null) ? "" : row.getCell(9).getStringCellValue();
+                    String typeOfKlesh = (row.getCell(10) == null) ? "" : row.getCell(10).getStringCellValue();
+                    String genderOfKlesh = (row.getCell(11) == null) ? "" : row.getCell(11).getStringCellValue();
+
+                    Bite bite = new Bite(callDate, biteDate, inCity, area, adminArea, material, kleshKB, kleshKE,
+                            antiGen, typeOfKlesh, genderOfKlesh);
+
+                    localArray.add(bite);
+                }
+                excel.getWorkbook().close();
+                gigaArray.addAll(localArray);
+            }
+            case "xlsx" -> {
+
+                Excel<XSSFWorkbook, XSSFSheet> excel = new Excel<>(
+                        new XSSFWorkbook(new FileInputStream(fileName)),
+                        new XSSFWorkbook(new FileInputStream(fileName)).getSheetAt(0));
+
+                for (int i = 1; i < excel.getSheet().getLastRowNum() + 1; i++) {
+
+                    XSSFRow row = excel.getSheet().getRow(i);
+
+                    Date callDate = (row.getCell(1) == null) ? new Date(0) : row.getCell(1).getDateCellValue();
+                    Date biteDate = (row.getCell(2) == null) ? new Date(0) : row.getCell(2).getDateCellValue();
+                    String inCity = (row.getCell(3) == null) ? "" : row.getCell(3).getStringCellValue();
+                    String area = (row.getCell(4) == null) ? "" : row.getCell(4).getStringCellValue();
+                    String adminArea = (row.getCell(5) == null) ? "" : row.getCell(5).getStringCellValue();
+                    String material = (row.getCell(6) == null) ? "" : row.getCell(6).getStringCellValue();
+                    String kleshKB = (row.getCell(7) == null) ? "" : row.getCell(7).getStringCellValue();
+                    String kleshKE = (row.getCell(8) == null) ? "" : row.getCell(8).getStringCellValue();
+                    String antiGen = (row.getCell(9) == null) ? "" : row.getCell(9).getStringCellValue();
+                    String typeOfKlesh = (row.getCell(10) == null) ? "" : row.getCell(10).getStringCellValue();
+                    String genderOfKlesh = (row.getCell(11) == null) ? "" : row.getCell(11).getStringCellValue();
+
+                    Bite bite = new Bite(callDate, biteDate, inCity, area, adminArea, material, kleshKB, kleshKE,
+                            antiGen, typeOfKlesh, genderOfKlesh);
+
+                    localArray.add(bite);
+                }
+                excel.getWorkbook().close();
+                gigaArray.addAll(localArray);
+            }
+        }
+    }
+
+    public static void weather(String fileName) throws IOException {
+
+        XSSFWorkbook myExcelBook = new XSSFWorkbook(new FileInputStream(fileName));
+
+        for (int i = 0; i < 3; i++) {
+
+            XSSFSheet weatherSheet = myExcelBook.getSheetAt(i);
+            Calendar currentDay = new GregorianCalendar(2010 + i, Calendar.JANUARY, 1);
+
+            for (int j = 0; j < 350; j++) {
+
+                Calendar day = null;
+                double avgTemperature;
+                double avgHumidity;
+                ArrayList<Double> temparaturesPerDay = new ArrayList<>();
+                ArrayList<Double> humidityPerDay = new ArrayList<>();
+
+                for (int k = 1; k < weatherSheet.getLastRowNum(); k++) {
+
+                    XSSFRow row = weatherSheet.getRow(k);
+
+                    if (row != null) {
+                        if (row.getCell(1) != null) {
+
+                            Calendar dayToWrite = new GregorianCalendar();
+                            dayToWrite.setTime(row.getCell(1).getDateCellValue());
+
+                            if (    dayToWrite.get(Calendar.YEAR) == currentDay.get(Calendar.YEAR) &&
+                                    dayToWrite.get(Calendar.MONTH) == currentDay.get(Calendar.MONTH) &&
+                                    dayToWrite.get(Calendar.DAY_OF_MONTH) == currentDay.get(Calendar.DAY_OF_MONTH)) {
+
+                                if (row.getCell(8) != null && row.getCell(10) != null) {
+                                    if (row.getCell(8).getCellType() == Cell.CELL_TYPE_STRING) {
+                                        double temperature = Double.parseDouble(row.getCell(8).getStringCellValue());
+                                        temparaturesPerDay.add(temperature);
+                                    }
+                                    if (row.getCell(8).getCellType() == Cell.CELL_TYPE_NUMERIC) {
+                                        double temperature = row.getCell(8).getNumericCellValue();
+                                        temparaturesPerDay.add(temperature);
+                                    }
+                                    humidityPerDay.add(row.getCell(10).getNumericCellValue());
+                                    day = dayToWrite;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (day != null) {
+
+                    double tempSum = 0;
+                    for (double el : temparaturesPerDay) {
+                        tempSum += el;
+                    }
+
+                    double humSum = 0;
+                    for (double el : humidityPerDay) {
+                        humSum += el;
+                    }
+
+                    avgTemperature = tempSum / temparaturesPerDay.size();
+                    avgHumidity = humSum / humidityPerDay.size();
+
+                    Weather weather = new Weather(day, avgTemperature, avgHumidity);
+                    weatherArray.add(weather);
+                }
+                currentDay.add(Calendar.DAY_OF_YEAR, 1);
+            }
+        }
+    }
+
+
+
+
+    public static Weather getWeatherInfoByDate(Date date) {
+
+        Calendar calendar = new GregorianCalendar();
+
+        if (date != null) {
+
+            calendar.setTime(date);
+
+            for (Weather weather : weatherArray) {
+                Calendar currentDay = weather.getCurrentDay();
+
+                if (calendar.get(Calendar.YEAR) == currentDay.get(Calendar.YEAR) &&
+                        calendar.get(Calendar.MONTH) == currentDay.get(Calendar.MONTH) &&
+                        calendar.get(Calendar.DAY_OF_MONTH) == currentDay.get(Calendar.DAY_OF_MONTH)) {
+                    return weather;
+                }
+            }
+        }
+        return new Weather(calendar, 0, 0);
+    }
+
+    public static TreeMap<Calendar, Integer> getMapWithDataAndAmount() {
+
+        TreeMap<Calendar, Integer> map = new TreeMap<>();
+
+        for (Bite bite : gigaArray) {
+
+            if (bite.getBiteDate() != null) {
+
+                Calendar calendar = new GregorianCalendar();
+                calendar.setTime(bite.getBiteDate());
+
+                Calendar day = new GregorianCalendar(
+                        calendar.get(Calendar.YEAR),
+                        calendar.get(Calendar.MONTH),
+                        calendar.get(Calendar.DAY_OF_MONTH));
+
+                if (day.get(Calendar.YEAR) >= 2010 && day.get(Calendar.YEAR) <= 2012) {
+                    map.put(day, map.getOrDefault(day, 0) + 1);
+                }
+            }
+        }
+
+
+        return map;
+    }
+
+    public static void getSetOfLocations() {
+
+        /*TreeMap<String, Integer> map = new TreeMap<>();
+
+        for (Bite bite : gigaArray) {
+            map.put(bite.getArea(), map.getOrDefault(bite.getArea(), 0) + 1);
+        }
+
+
+        int cnt = 0;
+        for (Map.Entry<String, Integer> entry : map.entrySet()) {
+            cnt += entry.getValue();
+            System.out.println(entry.getKey() + " === " + entry.getValue());
+        }
+
+
+        System.out.println(cnt);*/ // TODO: 01.06.2021 Что тут делать с геоданными их много и надо как-то обработать
+
+        /*ArrayList<Date> dates = new ArrayList<>();
+
+        for (Bite bite : gigaArray) {
+            if (bite.getBiteDate() != null) {
+                dates.add(bite.getBiteDate());
+            }
+
+        }
+
+        double size = dates.size();
+        double acc = size / gigaArray.size();
+
+        System.out.println(dates.size() + " from " + gigaArray.size() + " , accurency = " + acc  );*/ // всякая ненужная хрень
+    }
 }
