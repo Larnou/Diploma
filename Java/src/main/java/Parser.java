@@ -404,6 +404,49 @@ public class Parser {
             }
 
 
+            /*ArrayList<Integer> integers = new ArrayList<>();
+            integers.add(2);
+            integers.add(3);
+            integers.add(4);
+            integers.add(5);
+            integers.add(6);
+            integers.add(7);
+            integers.add(1);
+
+            System.out.println("День недели  Количество");
+            for (int i = 0; i < 7; i++) {
+
+                for (Map.Entry<Integer, Integer> entry : daysOfWeekAmount.entrySet()) {
+                    if (entry.getKey().equals(integers.get(i)) && integers.get(i) > 1) {
+                        int day = entry.getKey() - 1;
+                        int val = entry.getValue();
+
+                        System.out.println( DayOfWeek.of(day) + "      " + val);
+                    }
+                }
+
+            }
+
+            for (Map.Entry<Integer, Integer> entry : daysOfWeekAmount.entrySet()) {
+                if (entry.getKey().equals(1)) {
+                    int day = entry.getKey();
+                    int val = entry.getValue();
+
+                    System.out.println( DayOfWeek.of(7) + "      " + val);
+                }
+            }*/
+            System.out.println("Месяц  Количество");
+            for (Map.Entry<Integer, Integer> entry : monthsAmount.entrySet()) {
+
+                int mon = entry.getKey();
+                int val = entry.getValue();
+
+                System.out.println( Month.of(mon+1) + "    " + val);
+
+            }
+
+
+
             //--------------- SELECT DATA ------------------
             stmt = c.createStatement();
             sql = "SELECT * FROM KleshDB;";
@@ -481,10 +524,16 @@ public class Parser {
 
         /*for (int i = 0; i < 5; i++) {
             for (int j = 0; j < 1; j++) {
-                System.out.printf("%.3f",koefs[i][j]);
+                System.out.printf("%.3f",koefs[i][0]);
             }
             System.out.println();
         }*/
+
+        /*System.out.printf("Coef: b0: %.3f \n",koefs[0][0]);
+        System.out.printf("Coef: b1: %.3f \n",koefs[1][0]);
+        System.out.printf("Coef: b2: %.3f \n",koefs[2][0]);
+        System.out.printf("Coef: b3: %.3f \n",koefs[3][0]);
+        System.out.printf("Coef: b4: %.3f \n",koefs[4][0]);*/
 
 
         // ==============================================================================================
