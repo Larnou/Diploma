@@ -5,11 +5,18 @@ public class Weather {
     Calendar currentDay;
     double temperature;
     double humidity;
+    String precipitations;
 
-    public Weather(Calendar currentDay, double temperature, double humidity) {
+    public Weather(Calendar currentDay, double temperature, double humidity, String precipitations) {
         this.currentDay = currentDay;
         this.temperature = temperature;
         this.humidity = humidity;
+        this.precipitations = precipitations;
+    }
+
+
+    public String getPrecipitations() {
+        return precipitations;
     }
 
     public Calendar getCurrentDay() {
@@ -30,6 +37,7 @@ public class Weather {
                 "currentDay=" + currentDay +
                 ", temperature=" + temperature +
                 ", humidity=" + humidity +
+                ", precipitations='" + precipitations + '\'' +
                 '}';
     }
 }
